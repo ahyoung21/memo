@@ -3,6 +3,8 @@ const MEMO_ITEM = 'memo_item'; // 로컬스토리지에 저장될 키값
 let localStorageItem; // 로컬스토리지에 저장된 메모 배열
 let memoString = []; // 메모 템플릿이 담길 배열
 const headerHeight = 16; // 헤더의 높이값
+let numberCheck;
+let interval;
 
 wrap.oncontextmenu = function (e) {
   e.preventDefault();
@@ -26,7 +28,7 @@ const createMemo = (clientX, clientY, contents, width, height) => {
 				<button class="btn_close" onclick="deleteMemo(this);"><span class="blind">닫기</span></button>
 			</div>
 			<div class="content">
-				<div class="textarea" contenteditable="true" onclick="resizingMemo(this)" style="width: ${width}px; height: ${
+				<div class="textarea" contenteditable="true" onkeyup="keyupSave()" onclick="resizingMemo(this)" style="width: ${width}px; height: ${
     height - headerHeight
   }px">
 					${contents ? contents : '메모 하십시오!'}
@@ -60,6 +62,20 @@ const saveMemo = () => {
 
     window.localStorage.setItem(MEMO_ITEM, JSON.stringify(memoArray));
   });
+};
+
+// 내용 입력시 자동 저장 함수
+const keyupSave = () => {
+  numberCheck = 0;
+  clearInterval(interval);
+
+  interval = setInterval(() => {
+    numberCheck++;
+    if (numberCheck === 3) {
+      clearInterval(interval);
+      saveMemo();
+    }
+  }, 1000);
 };
 
 // 로컬스토리지에서 값 가져오는 함수
@@ -130,21 +146,12 @@ const moveMemo = () => {
 const observer = new ResizeObserver((entries, observer) => {});
 
 const resizingMemo = () => {
-  let numberCheck = 0;
   const textareaItems = document.querySelectorAll('.textarea');
 
   textareaItems.forEach((textarea) => {
     observer.observe(textarea);
+    saveMemo();
   });
-
-  // 클릭 때 마다 저장시 최적화에 좋지 않기 때문에 클릭 한 뒤 2초 후에 자동 저장처리를 해두었습니다.
-  const interval = setInterval(() => {
-    numberCheck++;
-    if (numberCheck === 2) {
-      clearInterval(interval);
-      saveMemo();
-    }
-  }, 1000);
 };
 
 // 메모 클릭시 해당 메모 최상단 노출
